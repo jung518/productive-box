@@ -1,17 +1,28 @@
-name: Update gist
+name: Update Commit Time Stats
+
 on:
-  push:
-    branches:
-      - master
   schedule:
-    - cron: "0 0 * * *"
+    - cron: "0 0 * * *" # 매일 오전 9시 실행
+  workflow_dispatch: # 수동 실행 버튼
+
 jobs:
-  update-gist:
+  update-commit-stats:
     runs-on: ubuntu-latest
     steps:
-      - name: Update gist
-        uses: maxam2017/productive-box@master
-        env:
-          GH_TOKEN: ${{ secrets.GH_TOKEN }}
-          GIST_ID: ${{ secrets.GIST_ID }}
-          TIMEZONE: Asia/Seoul
+      - name: Checkout repo
+        uses: actions/checkout@v3
+
+      - name: Generate Commit Time Stats SVG
+        run: |
+          mkdir -p ./assets
+          # 안정적인 서비스 주소로 교체
+          curl -o ./assets/commit-time.svg "https://github-readme-stats.vercel.app/api?username=jung518&show_icons=true&theme=nord"
+
+      - name: Commit & Push
+        run: |
+          git config --local user.email "action@github.com"
+          git config --local user.name "GitHub Action"
+          git add ./assets/commit-time.svg
+          git commit -m "Update commit stats" || echo "No changes to commit"
+          # master 브랜치로 강제 푸시하여 브랜치 꼬임 방지
+          git push origin HEAD:master
